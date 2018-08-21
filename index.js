@@ -49,7 +49,7 @@ app.get('/me', function(req, res) {
       
       res.status(200).send(decoded);
     });
-  });
+});
 
 app.listen(app.get('port'),function(){
     console.log('app is runnitng on - '+ app.get('port'));
