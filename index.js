@@ -20,6 +20,25 @@ app.set('port', process.env.port ||  3000);
 app.use(bodyparser.json());
 app.use(cors());
 
+function verifyToken(req, res, next){
+    if(!req.headers.authorization){
+        return res.status(401).json({success:"Unauthorized request"});
+    }else{
+        let token = req.headers.authorization.split(' ')[1];
+        if(token == 'null'){
+            return res.status(401).json({success:"Unauthorized request"});
+        }
+
+        let payload = jwt.verify(token,config.secret);
+        if(!payload){
+            return res.status(401).json({success:"Unauthorized request"});
+        }
+        req.userId = payload.subject;
+        next();
+    }
+
+}
+
 app.post('/register', (req, res) => {
     User.findOne({email: req.body.email}).exec().then(user => {
         if(user) {
@@ -41,7 +60,7 @@ app.post('/register', (req, res) => {
                             res.status(401).json({success:"There was a problem registering the user!"});
                         }else{ 
                             //jwt auth
-                            var token = jwt.sign({ email:req.body.email, id: result._id }, config.secret, {
+                            var token = jwt.sign({username:user.firstname+' '+user.lastname, email:req.body.email, id: result._id }, config.secret, {
                                 expiresIn: 86400 // expires in 24 hours
                             });
                             res.status(200).json({ auth: true, token: token , success:"Registration Successfully Completed!"}); 
@@ -61,10 +80,10 @@ app.post('/login', (req, res) => {
         if(user){
             bcrypt.compare(req.body.password, user.hashPassword, (err,result) => {
                     if(result){
-                        var token = jwt.sign({ email:user.email, id: user._id }, config.secret, {
+                        var token = jwt.sign({ username:user.firstname+' '+user.lastname,email:user.email, id: user._id }, config.secret, {
                             expiresIn: 86400 // expires in 24 hours
                         });
-                        res.status(200).json({success:'User successfully logged in!', data:user, status:result,token:token});
+                        res.status(200).json({success:'User successfully logged in!', status:result,token:token});
                     }else{
                         res.status(401).json({success:"Wrong Password!"}); 
                     }
@@ -73,6 +92,16 @@ app.post('/login', (req, res) => {
             });
         }else{
             res.status(401).json({success:"user email not exists!"});
+        }
+    });
+});
+
+app.get('/dashboard', verifyToken ,(req, res) => {
+    User.find({}).exec().then(user => {
+        if(user) {
+            res.status(200).json(user);
+        }else{
+            res.status(401).json({success:"User not Exists"});
         }
     });
 });
