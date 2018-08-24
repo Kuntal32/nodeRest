@@ -3,6 +3,7 @@ const bodyparser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId; 
 const User = require('./models/User');
 const config =require('./models/config');
 const cors = require('cors');
@@ -98,6 +99,17 @@ app.post('/login', (req, res) => {
 
 app.get('/dashboard', verifyToken ,(req, res) => {
     User.find({}).exec().then(user => {
+        if(user) {
+            res.status(200).json(user);
+        }else{
+            res.status(401).json({success:"User not Exists"});
+        }
+    });
+});
+
+app.get('/profile/:id', verifyToken, (req, res) => {
+    let user_id=req.params.id;
+    User.findOne(new ObjectId(user_id)).exec().then(user => {
         if(user) {
             res.status(200).json(user);
         }else{
