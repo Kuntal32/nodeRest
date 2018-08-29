@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId; 
 const User = require('./models/User');
+const Album = require('./models/album');
 const config =require('./models/config');
 const cors = require('cors');
 const app = express();
@@ -114,6 +115,37 @@ app.get('/profile/:id', verifyToken, (req, res) => {
             res.status(200).json(user);
         }else{
             res.status(401).json({success:"User not Exists"});
+        }
+    });
+});
+
+app.post('/CreateAlbum', verifyToken ,(req, res) => {
+    Album.findOne({'created_by':req.body.id,'title':req.body.title}).exec().then(data => {
+        if(data){
+            res.status(401).json({success:"Album title already have taken!"});
+        }else{
+            var album = new Album();
+            album.title = req.body.title;
+            album.description = req.body.description;
+            album.created_by = req.body.id;
+            album.created_date = new Date();
+            album.save((err, result)=>{
+                if(err){ 
+                    res.status(401).json({success:"There was a problem!"});
+                }else{ 
+                    res.status(200).json({success:"Album Successfully Created!",status:result}); 
+                }
+            });
+        }
+    });
+});
+
+app.get('/GetAlbums/:id', verifyToken ,(req, res) => {
+    Album.find({'created_by':req.params.id}).exec().then(data => {
+        if(data){
+            res.status(200).json(data);
+        }else{
+            res.status(401).json({success:"Album not Exists"});
         }
     });
 });
