@@ -144,12 +144,11 @@ app.get('/GetAlbums/:id/:pageIndex/:pageSize', verifyToken ,(req, res) => {
    
     var perPage = Math.max(0, req.params.pageSize);
     var page = Math.max(0, req.params.pageIndex);
-    console.log(req.params.pageSize);
-    console.log(page);
- Album.find({'created_by':req.params.id}).limit(perPage).skip(perPage * page).exec().then(data => {
+    
+    Album.find({'created_by':req.params.id}).limit(perPage).skip(perPage * page).exec().then(data => {
         if(data){
            
-           Album.count({'created_by':req.params.id},function(err, c){
+           Album.countDocuments({'created_by':req.params.id},function(err, c){
             var response_data = { 'data': data, 'pageSize': perPage, 'page':page,'length': c};
             res.status(200).json(response_data);
            });
