@@ -140,10 +140,20 @@ app.post('/CreateAlbum', verifyToken ,(req, res) => {
     });
 });
 
-app.get('/GetAlbums/:id', verifyToken ,(req, res) => {
-    Album.find({'created_by':req.params.id}).exec().then(data => {
+app.get('/GetAlbums/:id/:pageIndex/:pageSize', verifyToken ,(req, res) => {
+   
+    var perPage = Math.max(0, req.params.pageSize);
+    var page = Math.max(0, req.params.pageIndex);
+    console.log(req.params.pageSize);
+    console.log(page);
+ Album.find({'created_by':req.params.id}).limit(perPage).skip(perPage * page).exec().then(data => {
         if(data){
-            res.status(200).json(data);
+           
+           Album.count({'created_by':req.params.id},function(err, c){
+            var response_data = { 'data': data, 'pageSize': perPage, 'page':page,'length': c};
+            res.status(200).json(response_data);
+           });
+          
         }else{
             res.status(401).json({success:"Album not Exists"});
         }
