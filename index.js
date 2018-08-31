@@ -9,7 +9,21 @@ const Album = require('./models/album');
 const config =require('./models/config');
 const cors = require('cors');
 const app = express();
+const fs = require('fs');
+const multer = require('multer');
+const path = require('path');
 
+const DIR = './uploads';
+let storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, DIR);
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.fieldname + '-' + Date.now() + '.' + path.extname(file.originalname));
+    }
+});
+
+let upload = multer({storage: storage});
 mongoose.connect('mongodb://localhost:27017/meanAuth',  {useNewUrlParser: true} , (err, response) => {
     if(err){
         console.log('mongo err'+ err);
@@ -158,6 +172,21 @@ app.get('/GetAlbums/:id/:pageIndex/:pageSize', verifyToken ,(req, res) => {
         }
     });
 });
+
+app.post('/upload',verifyToken,upload.single('photo'), function (req, res) {
+   
+    if (!req.file) {
+        res.status(401).json({success:"Image Upload Failure!",status:false}); 
+    } else {
+        if(req.file.mimetype.split('/')[0]==='image'){
+            res.status(200).json({success:"Image Uploaded Successfully!",status:true}); 
+        }else{
+            res.status(401).json({success:"File type not supported!",status:false}); 
+        }
+        
+      }
+});
+ 
 
 
 app.listen(app.get('port'),function(){
