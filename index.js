@@ -41,7 +41,9 @@ app.use(cors());
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
   }); */
-
+app.get('/', (req, res) => {
+    res.send('Hello');
+});
 function verifyToken(req, res, next){
     if(!req.headers.authorization){
         return res.status(401).json({success:"Unauthorized request"});
