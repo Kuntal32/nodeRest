@@ -24,8 +24,9 @@ let storage = multer.diskStorage({
 });
 
 let upload = multer({storage: storage});
-mongoose.connect('mongodb://localhost:27017/meanAuth',  {useNewUrlParser: true} , (err, response) => {
-    if(err){
+// mongoose.connect('mongodb://localhost:27017/meanAuth',  {useNewUrlParser: true} , (err, response) => {
+mongoose.connect('mongodb+srv://kuntal32:blender@cluster0-lscvx.mongodb.net/meanAuth?retryWrites=true',  {useNewUrlParser: true} , (err, response) => {
+if(err){
         console.log('mongo err'+ err);
     }else{
       
