@@ -91,7 +91,7 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-   
+    res.setHeader('Access-Control-Allow-Origin','*') 
     User.findOne({email: req.body.email}).exec().then(user => {
        // console.log(user);
         if(user){
