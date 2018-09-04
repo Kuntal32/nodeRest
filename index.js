@@ -37,9 +37,6 @@ app.set('port', process.env.port ||  3000);
 app.use(bodyparser.json());
 app.use(cors());
 
-app.get('/', (req, res) => {
-    res.send('hello');
-});
 
 function verifyToken(req, res, next){
     if(!req.headers.authorization){
