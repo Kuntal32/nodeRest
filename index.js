@@ -36,7 +36,7 @@ if(err){
 app.set('port', process.env.port ||  3000);
 app.use(bodyparser.json());
 app.use(cors());
-
+app.use('/uploads', express.static(__dirname + "/uploads"));
 
 function verifyToken(req, res, next){
     if(!req.headers.authorization){
@@ -56,6 +56,10 @@ function verifyToken(req, res, next){
     }
 
 }
+
+app.get('/', function (req, res) {
+    res.send('Hello World');
+});
 
 app.post('/register', (req, res) => {
     User.findOne({email: req.body.email}).exec().then(user => {
@@ -174,15 +178,46 @@ app.get('/GetAlbums/:id/:pageIndex/:pageSize', verifyToken ,(req, res) => {
     });
 });
 
-app.post('/upload',verifyToken,upload.single('photo'), function (req, res) {
+app.get('/GetAlbumImageByAlbum/:albumId/:pageIndex/:pageSize', verifyToken ,(req, res) => {
    
+    var perPage = Math.max(0, req.params.pageSize);
+    var page = Math.max(0, req.params.pageIndex);
+    
+    Album.find(new ObjectId(req.params.albumId), {images:1}).limit(perPage).skip(perPage * page).exec().then(data => {
+        if(data){
+            var response_data = { 'data': data[0].images, 'pageSize': perPage, 'page':page,'length': data[0].images.length};
+            res.status(200).json(response_data);          
+        }else{
+            res.status(401).json({success:"Album not Exists"});
+        }
+    });
+});
+
+app.post('/upload',verifyToken,upload.single('photo'), function (req, res) {
     if (!req.file) {
         res.status(401).json({success:"Image Upload Failure!",status:false}); 
     } else {
         if(req.file.mimetype.split('/')[0]==='image'){
-            res.status(200).json({success:"Image Uploaded Successfully!",status:true}); 
+            var album = new Album();
+            var date = new Date();
+          
+            Album.findOne(new ObjectId(req.body.ObjectId)).exec().then(data => {
+                data.images.push({
+                    imagename: req.file.filename,
+                    contentType : req.file.mimetype,
+                    imagePath : req.file.path,
+                    uploaded_date : date
+                });
+                data.save().then(data => {
+                    if(data){
+                        res.status(200).json({success:"Image Uploaded Successfully!",status:true,image:data}); 
+                    }else{
+                        res.status(401).json({success:"File type not supported!",status:false}); 
+                    }
+                });
+            });
         }else{
-            res.status(401).json({success:"File type not supported!",status:false}); 
+            
         }
         
       }
